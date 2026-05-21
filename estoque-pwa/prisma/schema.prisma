@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  OPERATOR
+}
+
+enum AddressStatus {
+  EMPTY
+  OCCUPIED
+  RESERVED
+  DAMAGED
+}
+
+model Company {
+  id        String      @id @default(cuid())
+  name      String
+  users     User[]
+  categories Category[]
+  products  Product[]
+  warehouses Warehouse[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model User {
+  id            String       @id @default(cuid())
+  name          String
+  email         String       @unique
+  password      String
+  role          Role         @default(OPERATOR)
+  companyId     String
+  company       Company      @relation(fields: [companyId], references: [id])
+  countLogs     CountLog[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Warehouse {
+  id              String          @id @default(cuid())
+  name            String
+  companyId       String
+  company         Company         @relation(fields: [companyId], references: [id])
+  addressTemplate Json            @default("[\"Rua\", \"Prédio\", \"Nível\", \"Vão\"]")
+  addresses       Address[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model Address {
+  id            String         @id @default(cuid())
+  warehouseId   String
+  warehouse     Warehouse      @relation(fields: [warehouseId], references: [id])
+  fullAddress   String         @unique
+  addressParts  Json
+  status        AddressStatus  @default(EMPTY)
+  products      Product[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  companyId String
+  company   Company   @relation(fields: [companyId], references: [id])
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id          String     @id @default(cuid())
+  name        String
+  sku         String     @unique
+  quantity    Int        @default(0)
+  categoryId  String
+  category    Category   @relation(fields: [categoryId], references: [id])
+  addressId   String?
+  address     Address?   @relation(fields: [addressId], references: [id])
+  companyId   String
+  company     Company    @relation(fields: [companyId], references: [id])
+  photos      Photo[]
+  countLogs   CountLog[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Photo {
+  id        String   @id @default(cuid())
+  url       String
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  notes     String?
+  takenAt   DateTime @default(now())
+}
+
+model CountLog {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  previousQty Int
+  newQty      Int
+  countedAt   DateTime @default(now())
+}
