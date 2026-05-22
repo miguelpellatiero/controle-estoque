@@ -4,10 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "prisma db seed"
+    "seed": "prisma db seed",
+    "db:push": "prisma db push",
+    "db:seed": "prisma db seed",
+    "vercel-build": "npm run db:push && npm run db:seed && npm run build",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^5.15.0",

@@ -4,13 +4,17 @@ const { hash } = require('bcryptjs')
 const prisma = new PrismaClient()
 
 async function main() {
-  const company = await prisma.company.upsert({
+  let company = await prisma.company.findFirst({
     where: { name: 'Empresa Demo' },
-    create: {
-      name: 'Empresa Demo',
-    },
-    update: {},
   })
+
+  if (!company) {
+    company = await prisma.company.create({
+      data: {
+        name: 'Empresa Demo',
+      },
+    })
+  }
 
   const passwordHash = await hash('admin123', 10)
 
